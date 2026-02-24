@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
+  <title>2026俞家族 ·通讯录</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    body {
+      background: #f4f6f9;
+      display: flex;
+      justify-content: center;
+      min-height: 100vh;
+    }
+
+    .phone-frame {
+      width: 100%;
+      max-width: 480px;
+      background: #ffffff;
+      box-shadow: 0 0 30px rgba(0,0,0,0.03);
+      min-height: 100vh;
+      position: relative;
+    }
+
+    /* 头部 — 无红色元素 */
+    .header {
+      background: #ffffff;
+      padding: 24px 18px 12px 18px;
+      border-bottom: 1px solid #eef2f6;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      backdrop-filter: blur(6px);
+      background: rgba(255,255,255,0.96);
+    }
+
+    .header h1 {
+      font-size: 1.9rem;
+      font-weight: 400;
+      letter-spacing: -0.02em;
+      color: #1e2b3c;
+      margin-bottom: 6px;
+    }
+
+    .header .stats {
+      font-size: 0.9rem;
+      color: #64748b;
+      margin-bottom: 18px;
+      padding-left: 2px;
+      font-weight: 350;
+      border-left: none;  /* 无红色条 */
+    }
+
+    /* 搜索框 — 灰色调，聚焦浅灰 */
+    .search-container {
+      display: flex;
+      align-items: center;
+      background: #f0f3f8;
+      border-radius: 30px;
+      padding: 10px 18px;
+      border: 1px solid #e2e8f0;
+      transition: all 0.15s;
+    }
+
+    .search-container:focus-within {
+      background: #ffffff;
+      border-color: #a0b3cc;
+      box-shadow: 0 0 0 3px rgba(100,116,139,0.1);
+    }
+
+    .search-container span {
+      font-size: 1.2rem;
+      margin-right: 8px;
+      color: #8a9bb0;
+    }
+
+    .search-container input {
+      border: none;
+      background: transparent;
+      width: 100%;
+      font-size: 1rem;
+      outline: none;
+      padding: 4px 0;
+    }
+
+    .search-container input::placeholder {
+      color: #9aabbf;
+      font-weight: 300;
+    }
+
+    /* 结果计数 */
+    .result-hint {
+      padding: 10px 18px 4px 18px;
+      font-size: 0.85rem;
+      color: #566b82;
+      background: white;
+      border-bottom: 1px solid #edf2f7;
+    }
+
+    /* 联系人列表 */
+    .contact-list {
+      padding: 4px 12px 30px 12px;
+      background: #ffffff;
+    }
+
+    /* 卡片新样式：左右分布，手机号靠右，无图标 */
+    .contact-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      padding: 16px 12px;
+      border-bottom: 1px solid #eceff5;
+      gap: 12px;
+    }
+
+    .contact-info {
+      flex: 1;
+      min-width: 0; /* 防止溢出 */
+    }
+
+    .contact-name {
+      font-size: 1.2rem;
+      font-weight: 460;
+      color: #0f1a2c;
+      line-height: 1.4;
+      word-break: break-word;
+    }
+
+    .contact-work {
+      font-size: 0.88rem;
+      color: #5e6f88;
+      margin-top: 5px;
+      line-height: 1.4;
+      word-break: break-word;
+      white-space: normal;
+    }
+
+    /* 右侧电话号码区域 — 靠右，无背景无图标 */
+    .contact-tels {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 6px;
+      max-width: 180px;
+      flex-shrink: 0;
+    }
+
+    .tel-link {
+      font-size: 1rem;
+      color: #2c3e5c;
+      text-decoration: none;
+      line-height: 1.4;
+      text-align: right;
+      border-bottom: 1px solid transparent;
+      transition: color 0.1s, border-color 0.1s;
+      white-space: nowrap;
+    }
+
+    /* 长号码允许适当折行，但尽量保持一行 */
+    .tel-link {
+      display: inline-block;
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    /* 多个号码时取消 nowrap 让每个独立一行 */
+    .contact-tels .tel-link {
+      white-space: normal;
+      word-break: break-all;
+      text-align: right;
+      background: none;
+      border: none;
+      padding: 0;
+    }
+
+    .tel-link:hover {
+      color: #1f2a3f;
+      text-decoration: underline;
+      text-decoration-color: #a1b3cc;
+    }
+
+    /* 无电话占位样式 */
+    .no-tel {
+      font-size: 0.95rem;
+      color: #9aafc4;
+      font-style: normal;
+      text-align: right;
+      background: none;
+      border: none;
+      padding: 0;
+    }
+
+    /* 空搜索提示 */
+    .empty-message {
+      text-align: center;
+      padding: 70px 20px;
+      color: #8da0b8;
+      font-size: 1.1rem;
+      background: #fff;
+    }
+
+    /* 底部 */
+    .footer {
+      text-align: center;
+      padding: 18px;
+      color: #96a9bf;
+      font-size: 0.8rem;
+      border-top: 1px solid #eef2f6;
+      background: #ffffff;
+    }
+  </style>
+</head>
+<body>
+<div class="phone-frame">
+  <div class="header">
+    <h1>✝ 2026俞家族通讯录</h1>
+    <div class="stats"> 共 <span id="totalCount">0</span> 位成员 · 点击号码直拨</div>
+    <div class="search-container">
+      <span>🔍</span>
+      <input type="text" id="searchField" placeholder="姓名或工作单位" autocomplete="off">
+    </div>
+  </div>
+
+  <div class="result-hint" id="resultHint">显示全部</div>
+
+  <div class="contact-list" id="contactListContainer">
+    <!-- 由 JavaScript 动态渲染 -->
+  </div>
+
+  <div class="footer">
+    俞 家族  通讯录 · 点击号码可呼叫
+  </div>
+</div>
+
+<script>
+  (function() {
+    // ----- 完整数据（基于五张截图，已包含所有成员）-----
+    const familyData = [
+      { name: "俞增铭", work: "富阳区道路运输管理处退休", tel: "13567135206" },
+      { name: "徐维芳", work: "浙江东南汽运股份有限公司退休", tel: "18958177170" },
+      { name: "毛备军", work: "湖北雅都恒兴纸业有限公司", tel: "13646836338" },
+      { name: "俞颖", work: "富阳区交通运输执法队", tel: "13819135630" },
+      { name: "毛迦南", work: "东京大学研究生", tel: "15356639055" },
+      { name: "曹恩科", work: "株式会社综合设计研究所", tel: "13429179953" },
+      { name: "俞静芳", work: "重庆市第七人民医院退休", tel: "18100871142" },
+      { name: "田杰", work: "康师傅（重庆）方便食品有限公司", tel: "18883360794" },
+      { name: "洪黎", work: "建设银行重庆南坪支行", tel: "13983458956" },
+      { name: "田筱莹", work: "重庆怡卓人力资源管理有限公司", tel: "13983200814" },
+      { name: "陈哲", work: "广东东莞宏华玻璃厂", tel: "13669804206" },
+      { name: "田淑德", work: "重庆无缝钢管厂退休", tel: "18223162405" },
+      { name: "陈瑞祥", work: "重庆无缝钢管厂退休", tel: "13650581889" },
+      { name: "陈刚", work: "自主创业", tel: "13983376047" },
+      { name: "李红梅", work: "成都铁路局重庆客运段", tel: "13500342140" },
+      { name: "陈瑾如", work: "重庆工商大学读书", tel: "13996338743" },
+      { name: "田阳", work: "重庆蓄电池厂退休", tel: "18908375886" },
+      { name: "李经林", work: "重庆无缝钢管厂退休", tel: "15320294951" },
+      { name: "李渝鹏", work: "", tel: "18983877785" },
+      { name: "俞静宝", work: "春建上俞", tel: "13336090456" },
+      { name: "老大/俞利平", work: "退休在家", tel: "18968136301" },
+      { name: "金慧儿", work: "富阳惠耳听力", tel: "13868192798" },
+      { name: "胡红星", work: "富阳惠耳听力", tel: "13735412670" },
+      { name: "胡锦宇", work: "大学", tel: "" },
+      { name: "金曼柔", work: "小学", tel: "" },
+      { name: "金晓慧", work: "富阳惠耳听力", tel: "18968011007" },
+      { name: "徐建华", work: "杭州市富春强制隔离戒毒所", tel: "13806515201" },
+      { name: "徐锦东", work: "浙江中医药大学", tel: "19558126779" },
+      { name: "金曼悦", work: "小学", tel: "" },
+      { name: "老二/俞小平", work: "退休在家", tel: "13777497131" },
+      { name: "彭贤雪", work: "退休在家", tel: "" },
+      { name: "沈玲丽", work: "下城区朝晖社区卫生服务中心", tel: "13093725780" },
+      { name: "彭浩翔", work: "高中", tel: "" },
+      { name: "彭沈心", work: "幼儿小学", tel: "" },
+      { name: "彭小恩", work: "自主创业", tel: "15825528588" },
+      { name: "章静", work: "浙一医院血液科", tel: "13486109059" },
+      { name: "彭楠", work: "小学", tel: "18867536517" },
+      { name: "彭羽诺", work: "幼儿", tel: "" },
+      { name: "老三/俞利亚", work: "退休在家", tel: "15158152730" },
+      { name: "钱永仁", work: "卫生管理员", tel: "17858429673" },
+      { name: "钱恩妹", work: "人民医院耗材店\\水星家纺", tel: "15990139374" },
+      { name: "陶小明", work: "钢结构公司", tel: "13396529625" },
+      { name: "陶钰欣", work: "大学", tel: "" },
+      { name: "陶钰升", work: "小学", tel: "" },
+      { name: "钱恩福", work: "富阳飞尚装修公司", tel: "15267115848" },
+      { name: "杨琳", work: "环评检测公司", tel: "15925693848" },
+      { name: "钱尔淳", work: "初中", tel: "" },
+      { name: "钱尔乐", work: "幼儿园", tel: "" },
+      { name: "老四\\俞丽敏", work: "退休在家", tel: "13858103193" },
+      { name: "程根良", work: "退休在家", tel: "15988179123" },
+      { name: "唐雁军", work: "杭州富阳鑫同铜业有限公司", tel: "13625710278" },
+      { name: "程惠", work: "富阳惠耳听力", tel: "15858228820" },
+      { name: "唐雨泽", work: "初中", tel: "" },
+      { name: "程信", work: "杭州茂元环保科技有限公司", tel: "13868193130" },
+      { name: "周雯雯", work: "在家带娃", tel: "15158111321" },
+      { name: "程浩扬", work: "小学", tel: "" },
+      { name: "程奕扬", work: "小学", tel: "" },
+      { name: "老五\\俞旭华", work: "退休在家", tel: "15268504192" },
+      { name: "陶宝松", work: "退休在家", tel: "15158098162" },
+      { name: "陶勇军", work: "杭州富阳宇乾材料有限公司", tel: "18989892189" },
+      { name: "蒋孝燕", work: "富春街道办事处", tel: "15968186422" },
+      { name: "陶宸霖", work: "幼儿园", tel: "" },
+      { name: "羊军民", work: "杭州富阳江南电子仪器厂", tel: "18072958989" },
+      { name: "陶慧萍", work: "羊氏礼品", tel: "13588858989" },
+      { name: "羊钰轩", work: "高中", tel: "" },
+      { name: "羊锦轩", work: "小学", tel: "" },
+      { name: "老六/俞勤儿", work: "退休在家", tel: "13306503161" },
+      { name: "沈岳明", work: "复旦大学", tel: "13606707847" },
+      { name: "沈亦乐", work: "中银基金管理公司", tel: "15000112924" },
+      { name: "高翔", work: "爱科诺制药", tel: "18616038975" },
+      { name: "高嘉珩", work: "幼儿", tel: "" },
+      { name: "老七/俞七妹", work: "退休在家", tel: "13758260249" },
+      { name: "王孔良", work: "退休在家", tel: "15867180438" },
+      { name: "王以琳", work: "富阳惠耳听力", tel: "13735466710" },
+      { name: "赵羚", work: "大源镇中心幼儿园", tel: "15858143914" },
+      { name: "王迦悦", work: "幼儿", tel: "" },
+      { name: "赵迦怡", work: "幼儿", tel: "" },
+      { name: "俞以勒", work: "字画装裱", tel: "18268117710" },
+      { name: "雷云日", work: "中国邮政集团有限公司杭州市分公司", tel: "18368400781" },
+      { name: "陈书念", work: "幼儿园", tel: "" },
+      { name: "俞书亚", work: "幼儿", tel: "" },
+      { name: "吕尚忠", work: "桐庐县人民教师退休", tel: "19858166769" },
+      { name: "俞静芬", work: "退休", tel: "13454126969" },
+      { name: "吕叶飞", work: "桐庐县石马铝材商行", tel: "13858170128" },
+      { name: "吴彩珠", work: "桐庐县石马铝材商行", tel: "13606601821" },
+      { name: "吕加恩", work: "雅培医疗用品有限公司", tel: "13738195802" },
+      { name: "方果妙", work: "桐庐县原水经营有限公司", tel: "" },
+      { name: "吕天泽", work: "幼儿", tel: "" },
+      { name: "吕沐槿", work: "幼儿", tel: "" },
+      { name: "吕沐菡", work: "幼儿", tel: "" },
+      { name: "周兢宏", work: "杭州安恒信息技术股份有限公司", tel: "15088684377" },
+      { name: "刘巧丽", work: "无", tel: "15869045467" },
+      { name: "周俊译", work: "幼儿", tel: "" },
+      { name: "周婉柠", work: "幼儿", tel: "" },
+      { name: "程金龙", work: "务农", tel: "18067935419" },
+      { name: "程晓雯", work: "富春江镇政府", tel: "18768455926" },
+      { name: "周泽航", work: "桐庐农商行", tel: "18767150479" },
+      { name: "周洛洛", work: "幼儿", tel: "" },
+      { name: "程成", work: "杭州福杰医疗器械", tel: "13735832661" },
+      { name: "郑国华", work: "桐庐县城南街道国华不锈钢经营部", tel: "13968054411" },
+      { name: "吕雪华", work: "桐庐县城南街道国华不锈钢经营部", tel: "15958045757" },
+      { name: "郑洁", work: "杭州水晶运动机械股份有限公司设计", tel: "15857132816" },
+      { name: "申屠至秦", work: "南宁医疗器械", tel: "18258420089" },
+      { name: "吕国飞", work: "桐庐县人民法院法警", tel: "13735812699" },
+      { name: "吕碧云", work: "桐庐县第一人民医院护士长", tel: "13616523499" },
+      { name: "吕科", work: "湖北中医药大学学生", tel: "18327155196" },
+      { name: "俞静慧", work: "退休", tel: "15824179213" },
+      { name: "郑刚", work: "杭州市政府", tel: "13336038881" },
+      { name: "付晓静", work: "退休", tel: "13335812323" },
+      { name: "郑琦雯", work: "浙江元谷文创产业发展有限公司", tel: "13989841077" },
+      { name: "陈亮", work: "中外运空运发展公司浙江分公司", tel: "13616517632" },
+      { name: "陈奕帆", work: "", tel: "" },
+      { name: "郑霞", work: "太平洋保险", tel: "13857155662" },
+      { name: "何子成", work: "杭州市机关汽修中心/公车中心", tel: "13750808369" },
+      { name: "何林铄", work: "", tel: "" },
+      { name: "何子超", work: "", tel: "13738009549" },
+      { name: "郑强", work: "杭州嘉祥房地产投资有限公司", tel: "13958085261" },
+      { name: "王蓓", work: "工商银行杭州分行", tel: "13757119919" },
+      { name: "郑文妍", work: "浙江长龙航空有限公司", tel: "13989891018" },
+      { name: "俞静娣", work: "退休", tel: "15990192567" },
+      { name: "俞光松", work: "退休", tel: "15990190567" },
+      { name: "俞君玉", work: "退休", tel: "13868185008" },
+      { name: "孙玛莉", work: "杭州佳音培训学校", tel: "13819198908" },
+      { name: "吴辰辰", work: "杭州佳音培训学校", tel: "13777558999" },
+      { name: "吴锦翊", work: "幼儿", tel: "" },
+      { name: "吴锦心", work: "幼儿", tel: "" },
+      { name: "俞民强", work: "杭州墨泽文化传播有限公司", tel: "13968142818" },
+      { name: "胡莉娟", work: "退休", tel: "15355070552" },
+      { name: "金凡", work: "思拓凡生物科技有限公司", tel: "13675846452" },
+      { name: "俞多加", work: "国家金融监督管理总局浙江监管局", tel: "15158030885" },
+      { name: "金安愉", work: "杭州长江实验小学", tel: "" },
+      { name: "金睿愉", work: "杭州安吉路小学", tel: "" },
+      { name: "俞加辉", work: "阿里淘宝天下", tel: "18268153325" },
+      { name: "徐梦霞", work: "余杭中泰小学", tel: "13868150197" },
+      { name: "俞承敬", work: "幼儿", tel: "" },
+      { name: "俞天民", work: "富阳海关食堂", tel: "15824159777" },
+      { name: "许荷娟", work: "无职业", tel: "13456711166" },
+      { name: "俞家成", work: "广告", tel: "18814822238" },
+      { name: "张延英", work: "非凡教育", tel: "17205819367" },
+      { name: "俞灵爱", work: "幼儿", tel: "" },
+      { name: "俞迦丽", work: "富阳吗哪艺术培训", tel: "15700065281" },
+      { name: "曹迦勒", work: "东航", tel: "15888103565" }
+    ];
+
+    // 更新总人数
+    document.getElementById('totalCount').innerText = familyData.length;
+
+    const searchInput = document.getElementById('searchField');
+    const container = document.getElementById('contactListContainer');
+    const hint = document.getElementById('resultHint');
+
+    function render(filterText) {
+      const term = filterText.trim().toLowerCase();
+      let filtered = familyData;
+
+      if (term !== '') {
+        filtered = familyData.filter(item => 
+          item.name.toLowerCase().includes(term) || 
+          (item.work && item.work.toLowerCase().includes(term))
+        );
+      }
+
+      // 更新统计提示
+      if (term === '') {
+        hint.innerText = `显示全部 · ${filtered.length} 人`;
+      } else {
+        hint.innerText = `“${filterText}” 找到 ${filtered.length} 位`;
+      }
+
+      if (filtered.length === 0) {
+        container.innerHTML = `<div class="empty-message">👀 没有匹配的家族成员</div>`;
+        return;
+      }
+
+      let html = '';
+      filtered.forEach(p => {
+        const name = p.name;
+        // 工作单位: 如果有非空字符串才显示，否则隐藏整行
+        const workHtml = p.work && p.work.trim() !== '' ? `<div class="contact-work">${p.work}</div>` : '';
+
+        // 处理电话号码 (可能多个)
+        let telsHtml = '';
+        if (!p.tel || p.tel.trim() === '') {
+          telsHtml = `<span class="no-tel">——</span>`;
+        } else {
+          const telList = p.tel.split(',').map(t => t.trim()).filter(t => t !== '');
+          if (telList.length === 0) {
+            telsHtml = `<span class="no-tel">——</span>`;
+          } else {
+            // 生成多个可点击链接，每个独立一行靠右
+            telsHtml = telList.map(t => `<a href="tel:${t}" class="tel-link">${t}</a>`).join('');
+          }
+        }
+
+        html += `
+          <div class="contact-row">
+            <div class="contact-info">
+              <div class="contact-name">${name}</div>
+              ${workHtml}
+            </div>
+            <div class="contact-tels">
+              ${telsHtml}
+            </div>
+          </div>
+        `;
+      });
+
+      container.innerHTML = html;
+    }
+
+    // 初始渲染
+    render('');
+
+    // 实时搜索
+    searchInput.addEventListener('input', (e) => {
+      render(e.target.value);
+    });
+
+  })();
+</script>
+</body>
+</html>
